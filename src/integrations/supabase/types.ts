@@ -803,13 +803,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_match_candidate: {
-        Args: { p_drop_id: string; p_user_id: string }
-        Returns: {
-          candidate_queue_id: string
-          candidate_user_id: string
-        }[]
-      }
       get_drop_rsvp_count: { Args: { _drop_id: string }; Returns: number }
       has_role: {
         Args: {
