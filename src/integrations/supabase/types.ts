@@ -10,10 +10,53 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value_json: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value_json: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value_json?: Json
+        }
+        Relationships: []
+      }
       appeals: {
         Row: {
           admin_response: string | null
@@ -803,6 +846,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_match_candidate: {
+        Args: { p_drop_id: string; p_user_id: string }
+        Returns: {
+          candidate_queue_id: string
+          candidate_user_id: string
+        }[]
+      }
       get_drop_rsvp_count: { Args: { _drop_id: string }; Returns: number }
       has_role: {
         Args: {
@@ -820,18 +870,64 @@ export type Database = {
           p_call_id: string
           p_decision: Database["public"]["Enums"]["spark_decision"]
         }
-        Returns: Database["public"]["Tables"]["calls"]["Row"]
+        Returns: {
+          agora_channel: string | null
+          callee_decision: Database["public"]["Enums"]["spark_decision"] | null
+          callee_id: string
+          caller_decision: Database["public"]["Enums"]["spark_decision"] | null
+          caller_id: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          is_mutual_spark: boolean | null
+          room_id: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["call_status"] | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "calls"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_my_profile: {
         Args: {
-          p_avatar_url?: string | null
-          p_bio?: string | null
-          p_city?: string | null
-          p_display_name?: string | null
-          p_gender?: string | null
-          p_handle?: string | null
+          p_avatar_url?: string
+          p_bio?: string
+          p_city?: string
+          p_display_name?: string
+          p_gender?: string
+          p_handle?: string
         }
-        Returns: Database["public"]["Tables"]["profiles"]["Row"]
+        Returns: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          created_at: string
+          display_name: string | null
+          gender: string | null
+          handle: string | null
+          id: string
+          is_active: boolean | null
+          stripe_customer_id: string | null
+          subscription_expires_at: string | null
+          subscription_tier:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          token_balance: number
+          updated_at: string
+          user_id: string
+          verification_status: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
@@ -966,6 +1062,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],

@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface FeatureFlags {
   requirePhoneVerification: boolean;
 }
@@ -26,7 +28,6 @@ export const parseFeatureFlagsPayload = (value: unknown): FeatureFlags => {
 
 export const fetchFeatureFlags = async (): Promise<FeatureFlags> => {
   try {
-    const { supabase } = await import("@/integrations/supabase/client");
     const { data, error } = await supabase.functions.invoke("get-feature-flags", {
       body: {},
     });

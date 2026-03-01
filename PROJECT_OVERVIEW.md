@@ -2,6 +2,13 @@
 
 *Last updated: February 27, 2026*
 
+> **Historical Snapshot Notice**
+> This document reflects a point-in-time assessment from February 27, 2026 and is not the canonical operational source of truth.
+> For current production state, use:
+> - `README.md`
+> - `docs/environment-matrix.md`
+> - `docs/evidence-pack-final-2026-03-02.md`
+
 ---
 
 ## 1. Primary Objectives & Intended Outcomes
