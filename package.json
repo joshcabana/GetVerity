@@ -6,9 +6,7 @@
   "packageManager": "npm@10.9.2",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node ./scripts/require-env.mjs",
     "build": "vite build",
-    "prebuild:dev": "node ./scripts/require-env.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
