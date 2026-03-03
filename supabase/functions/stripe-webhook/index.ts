@@ -15,11 +15,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 //   "price_pass_annual"  → activates "pass_annual" subscription tier
 // ────────────────────────────────────────────────────────────────────────
 const PRICE_ENTITLEMENTS: Record<string, { tokens?: number; tier?: string; annual?: boolean }> = {
-  "price_starter_10": { tokens: 10 },
-  "price_popular_15": { tokens: 15 },
-  "price_value_30": { tokens: 30 },
-  "price_pass_monthly": { tier: "pass_monthly", annual: false },
-  "price_pass_annual": { tier: "pass_annual", annual: true },
+  "price_1T6rXLC1O032lUHcL3kvvio4": { tokens: 10 },
+  "price_1T6rYJC1O032lUHc3fO3j6R6": { tokens: 15 },
+  "price_1T6rZ0C1O032lUHciuLq0TXN": { tokens: 30 },
+  "price_1T6rZjC1O032lUHcZiPWdPg7": { tier: "pass_monthly", annual: false },
+  "price_1T6rawC1O032lUHcywgSq3ft": { tier: "pass_annual", annual: true },
 };
 
 serve(async (req) => {

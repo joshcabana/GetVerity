@@ -11,9 +11,9 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const tokenPacks = [
-  { id: "starter", name: "Starter", tokens: 10, price: "$4.90", entries: 10, badge: null, price_id: "price_starter_10" },
-  { id: "popular", name: "Popular", tokens: 15, price: "$6.90", entries: 15, badge: "Most popular", price_id: "price_popular_15" },
-  { id: "value", name: "Value", tokens: 30, price: "$11.90", entries: 30, badge: "Best value", price_id: "price_value_30" },
+  { id: "starter", name: "Starter", tokens: 10, price: "$4.90", entries: 10, badge: null, price_id: "price_1T6rXLC1O032lUHcL3kvvio4" },
+  { id: "popular", name: "Popular", tokens: 15, price: "$6.90", entries: 15, badge: "Most popular", price_id: "price_1T6rYJC1O032lUHc3fO3j6R6" },
+  { id: "value", name: "Value", tokens: 30, price: "$11.90", entries: 30, badge: "Best value", price_id: "price_1T6rZ0C1O032lUHciuLq0TXN" },
 ] as const;
 
 const passPerks = [
@@ -276,7 +276,7 @@ const TokenShop = () => {
                 disabled={!!loadingPriceId}
                 onClick={() =>
                   handleCheckout(
-                    billingCycle === "monthly" ? "price_pass_monthly" : "price_pass_annual",
+                    billingCycle === "monthly" ? "price_1T6rZjC1O032lUHcZiPWdPg7" : "price_1T6rawC1O032lUHcywgSq3ft",
                     "Verity Pass"
                   )
                 }

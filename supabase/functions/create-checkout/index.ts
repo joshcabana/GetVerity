@@ -26,11 +26,11 @@ const ALLOWED_ORIGINS = [
 //   "price_pass_annual"  → Annual subscription pass
 // ────────────────────────────────────────────────────────────────────────
 const PRICE_MAP: Record<string, { mode: "payment" | "subscription" }> = {
-  "price_starter_10": { mode: "payment" },
-  "price_popular_15": { mode: "payment" },
-  "price_value_30": { mode: "payment" },
-  "price_pass_monthly": { mode: "subscription" },
-  "price_pass_annual": { mode: "subscription" },
+  "price_1T6rXLC1O032lUHcL3kvvio4": { mode: "payment" },
+  "price_1T6rYJC1O032lUHc3fO3j6R6": { mode: "payment" },
+  "price_1T6rZ0C1O032lUHciuLq0TXN": { mode: "payment" },
+  "price_1T6rZjC1O032lUHcZiPWdPg7": { mode: "subscription" },
+  "price_1T6rawC1O032lUHcywgSq3ft": { mode: "subscription" },
 };
 
 serve(async (req) => {
