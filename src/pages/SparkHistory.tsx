@@ -23,6 +23,7 @@ interface SparkWithPartner {
   partner_id: string;
   partner_name: string;
   partner_voice_status: "available" | "skipped" | "none";
+  unread_count: number;
 }
 
 const SparkHistory = () => {
@@ -64,6 +65,23 @@ const SparkHistory = () => {
         });
       }
 
+      // Fetch unread message counts per spark
+      const sparkIds = (data || []).map((s) => s.id);
+      const unreadMap: Record<string, number> = {};
+      if (sparkIds.length > 0) {
+        const { data: unreadMessages } = await supabase
+          .from("messages")
+          .select("spark_id")
+          .in("spark_id", sparkIds)
+          .neq("sender_id", user.id)
+          .eq("is_read", false);
+        if (unreadMessages) {
+          for (const m of unreadMessages) {
+            unreadMap[m.spark_id] = (unreadMap[m.spark_id] || 0) + 1;
+          }
+        }
+      }
+
       return (data || []).map((s) => {
         const partnerId = s.user_a === user.id ? s.user_b : s.user_a;
         const partnerVoice = s.user_a === user.id ? s.voice_intro_b : s.voice_intro_a;
@@ -74,6 +92,7 @@ const SparkHistory = () => {
           partner_id: partnerId,
           partner_name: profileMap[partnerId] || `Spark ${s.id.slice(-4)}`,
           partner_voice_status: voiceStatus,
+          unread_count: unreadMap[s.id] || 0,
         };
       });
     },

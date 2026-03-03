@@ -8,6 +8,7 @@ interface SparkData {
   is_archived: boolean | null;
   partner_name: string;
   partner_voice_status?: "available" | "skipped" | "none";
+  unread_count?: number;
 }
 
 interface SparkCardProps {
@@ -29,6 +30,7 @@ function timeAgo(dateStr: string): string {
 const SparkCard = ({ spark, index }: SparkCardProps) => {
   const navigate = useNavigate();
   const voiceStatus = spark.partner_voice_status ?? "none";
+  const unread = spark.unread_count ?? 0;
 
   return (
     <motion.button
@@ -61,12 +63,21 @@ const SparkCard = ({ spark, index }: SparkCardProps) => {
           <h3 className="text-sm font-medium text-foreground truncate">
             {spark.partner_name}
           </h3>
-          <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 ml-2">
-            {timeAgo(spark.created_at)}
-          </span>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            {unread > 0 && (
+              <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+            <span className="text-[10px] text-muted-foreground/50">
+              {timeAgo(spark.created_at)}
+            </span>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground truncate">
-          {voiceStatus === "available"
+        <p className={`text-xs truncate ${unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+          {unread > 0
+            ? `${unread} new message${unread > 1 ? "s" : ""}`
+            : voiceStatus === "available"
             ? "🎙️ Voice intro available"
             : "Say hello…"}
         </p>
