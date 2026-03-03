@@ -32,7 +32,7 @@ const Profile = () => {
 
   const updateNameMutation = useMutation({
     mutationFn: async (newName: string) => {
-      const { error } = await (supabase.rpc as any)("update_my_profile", {
+      const { error } = await supabase.rpc("update_my_profile", {
         p_display_name: newName,
       });
       if (error) throw error;
@@ -70,7 +70,7 @@ const Profile = () => {
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
 
       const avatarUrlWithVersion = `${urlData.publicUrl}?t=${Date.now()}`;
-      const { error: updateErr } = await (supabase.rpc as any)("update_my_profile", {
+      const { error: updateErr } = await supabase.rpc("update_my_profile", {
         p_avatar_url: avatarUrlWithVersion,
       });
       if (updateErr) throw updateErr;

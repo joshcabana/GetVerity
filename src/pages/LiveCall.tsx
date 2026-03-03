@@ -281,7 +281,7 @@ const LiveCall = () => {
     setMyChoice(choice);
     setPhase("waiting");
 
-    const { error } = await (supabase.rpc as any)("submit_call_decision", {
+    const { error } = await supabase.rpc("submit_call_decision", {
       p_call_id: callId,
       p_decision: choice,
     });

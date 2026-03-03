@@ -99,13 +99,20 @@ const SparkHistory = () => {
     enabled: !!user,
   });
 
-  const filtered = sparks.filter((s) => {
-    if (active === "Archived") return s.is_archived;
-    if (active === "This Week") {
-      return !s.is_archived && Date.now() - new Date(s.created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
-    }
-    return !s.is_archived;
-  });
+  const filtered = sparks
+    .filter((s) => {
+      if (active === "Archived") return s.is_archived;
+      if (active === "This Week") {
+        return !s.is_archived && Date.now() - new Date(s.created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
+      }
+      return !s.is_archived;
+    })
+    .sort((a, b) => {
+      if (a.unread_count > 0 && b.unread_count === 0) return -1;
+      if (a.unread_count === 0 && b.unread_count > 0) return 1;
+      if (a.unread_count !== b.unread_count) return b.unread_count - a.unread_count;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   return (
     <div className="min-h-screen bg-background pb-20">
