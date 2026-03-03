@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import SparkCard from "@/components/sparks/SparkCard";
 import SparkEmptyState from "@/components/sparks/SparkEmptyState";
 import BottomNav from "@/components/BottomNav";
+import ReplayVault from "@/components/vault/ReplayVault";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const filters = ["All", "This Week", "Archived"] as const;
 type Filter = (typeof filters)[number];
@@ -41,7 +43,6 @@ const SparkHistory = () => {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Get partner display names
       const partnerIds = (data || []).map((s) =>
         s.user_a === user.id ? s.user_b : s.user_a
       );
@@ -49,7 +50,6 @@ const SparkHistory = () => {
 
       const profileMap: Record<string, string> = {};
       if (uniqueIds.length > 0) {
-        // Use RPC to fetch only safe fields for spark partners
         const results = await Promise.all(
           uniqueIds.map((uid) =>
             supabase.rpc("get_spark_partner_profile", { _partner_user_id: uid })
@@ -58,14 +58,12 @@ const SparkHistory = () => {
         results.forEach(({ data: profiles }) => {
           if (profiles) {
             profiles.forEach((p: { user_id: string; display_name: string | null }) => {
-              const firstName = p.display_name?.split(" ")[0] || "Spark";
-              profileMap[p.user_id] = firstName;
+              profileMap[p.user_id] = p.display_name?.split(" ")[0] || "Spark";
             });
           }
         });
       }
 
-      // Fetch unread message counts per spark
       const sparkIds = (data || []).map((s) => s.id);
       const unreadMap: Record<string, number> = {};
       if (sparkIds.length > 0) {
@@ -116,38 +114,50 @@ const SparkHistory = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="container max-w-2xl mx-auto px-5 pt-5 pb-4">
-          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="font-serif text-2xl text-foreground mb-4">
-            Your Sparks
-          </motion.h1>
-          <div className="flex gap-2">
-            {filters.map((f) => (
-              <button key={f} onClick={() => setActive(f)}
-                className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-300 ${
-                  active === f
-                    ? "bg-primary/10 text-primary border border-primary/25"
-                    : "bg-secondary/50 text-muted-foreground border border-transparent hover:bg-secondary"
-                }`}>
-                {f}
-              </button>
-            ))}
+      <Tabs defaultValue="sparks" className="w-full">
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
+          <div className="container max-w-2xl mx-auto px-5 pt-5 pb-4">
+            <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="font-serif text-2xl text-foreground mb-4">
+              Your Sparks
+            </motion.h1>
+            <TabsList className="w-full">
+              <TabsTrigger value="sparks" className="flex-1">Sparks</TabsTrigger>
+              <TabsTrigger value="vault" className="flex-1">Vault ✨</TabsTrigger>
+            </TabsList>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container max-w-2xl mx-auto px-5 pt-5">
-        {filtered.length === 0 ? (
-          <SparkEmptyState />
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((spark, i) => (
-              <SparkCard key={spark.id} spark={spark} index={i} />
-            ))}
-          </div>
-        )}
-      </main>
+        <main className="container max-w-2xl mx-auto px-5 pt-5">
+          <TabsContent value="sparks">
+            <div className="flex gap-2 mb-4">
+              {filters.map((f) => (
+                <button key={f} onClick={() => setActive(f)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs transition-all duration-300 ${
+                    active === f
+                      ? "bg-primary/10 text-primary border border-primary/25"
+                      : "bg-secondary/50 text-muted-foreground border border-transparent hover:bg-secondary"
+                  }`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+            {filtered.length === 0 ? (
+              <SparkEmptyState />
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((spark, i) => (
+                  <SparkCard key={spark.id} spark={spark} index={i} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="vault">
+            <ReplayVault />
+          </TabsContent>
+        </main>
+      </Tabs>
 
       <BottomNav activeTab="sparks" />
     </div>

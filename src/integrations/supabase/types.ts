@@ -135,6 +135,57 @@ export type Database = {
           },
         ]
       }
+      chemistry_replays: {
+        Row: {
+          call_id: string
+          created_at: string
+          duration_seconds: number
+          id: string
+          spark_id: string
+          status: string
+          user_a: string
+          user_b: string
+          video_url: string | null
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          spark_id: string
+          status?: string
+          user_a: string
+          user_b: string
+          video_url?: string | null
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          spark_id?: string
+          status?: string
+          user_a?: string
+          user_b?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chemistry_replays_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chemistry_replays_spark_id_fkey"
+            columns: ["spark_id"]
+            isOneToOne: false
+            referencedRelation: "sparks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drop_rsvps: {
         Row: {
           checked_in: boolean

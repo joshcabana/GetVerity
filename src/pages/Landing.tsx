@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
@@ -28,9 +29,9 @@ const jsonLd = {
   },
 };
 
-const Landing = () => {
+const Landing = forwardRef<HTMLDivElement>((_, ref) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={ref} className="min-h-screen bg-background">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
@@ -43,6 +44,7 @@ const Landing = () => {
       <Footer />
     </div>
   );
-};
+});
+Landing.displayName = "Landing";
 
 export default Landing;
