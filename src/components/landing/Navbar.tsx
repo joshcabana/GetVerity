@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import VerityLogo from "@/components/VerityLogo";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const Navbar = () => {
+const Navbar = forwardRef<HTMLElement>((_, ref) => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -44,6 +44,8 @@ const Navbar = () => {
       </div>
     </motion.nav>
   );
-};
+});
+
+Navbar.displayName = "Navbar";
 
 export default Navbar;
