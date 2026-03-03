@@ -1,47 +1,30 @@
 
 
-## Plan: Fix RPC Type Casts & Sort Sparks by Unread
+## Recommendation: Enforce Trust Gates on Drop Participation
 
-Two high-impact, low-risk improvements from the launch checklist.
+### Why this is next
 
----
+Trust gate enforcement is the most important remaining item for pilot readiness. Currently, onboarding collects phone/selfie/pledge data, but there's no hard block preventing unverified users from RSVPing to Drops or joining calls. This is a safety requirement — every user in a live call must be identity-verified.
 
-### Task 1: Remove `(supabase.rpc as any)` casts
+### What changes
 
-The generated `types.ts` already includes typed definitions for `submit_call_decision` and `update_my_profile`. The `as any` casts are unnecessary and suppress type safety.
+**1. Lobby page — block RSVP for unverified users**
+- In `src/pages/Lobby.tsx`, check `userTrust` from `useAuth()` before allowing RSVP
+- If trust requirements are incomplete, show a prompt directing the user to complete onboarding instead of the RSVP button
+- Respect the `requirePhoneVerification` feature flag (some deployments may not require phone)
 
-**Files:**
-- `src/pages/LiveCall.tsx` (line 284): Change `(supabase.rpc as any)("submit_call_decision", ...)` to `supabase.rpc("submit_call_decision", ...)`
-- `src/pages/Profile.tsx` (lines 35, 73): Same pattern for `update_my_profile`
+**2. LiveCall page — server-side guard**
+- The `find-match` edge function should verify the caller's trust status before matching
+- Add a check in `supabase/functions/find-match/index.ts` that queries `user_trust` for the authenticated user and rejects if `selfie_verified`, `safety_pledge_accepted`, or `phone_verified` (when required) are false
 
-3 lines changed across 2 files. Zero logic change — purely removing unsafe casts.
+**3. ProtectedRoute — add `requireTrust` to Lobby and LiveCall routes**
+- `ProtectedRoute` already has a `requireTrust` prop — wire it into the route definitions for `/lobby` and `/live-call` in `App.tsx`
 
----
+### Files modified
+- `src/App.tsx` — add `requireTrust` to Lobby and LiveCall routes
+- `src/pages/Lobby.tsx` — disable RSVP button with verification prompt for unverified users
+- `supabase/functions/find-match/index.ts` — server-side trust check before matching
 
-### Task 2: Sort spark cards — unread first
-
-In `src/pages/SparkHistory.tsx`, after the existing filter logic (line 102-108), sort the `filtered` array so sparks with `unread_count > 0` appear at the top, ordered by most unread first, then by `created_at` descending for the rest.
-
-**Change:** Add `.sort()` after `.filter()`:
-```ts
-const filtered = sparks
-  .filter(...)
-  .sort((a, b) => {
-    if (a.unread_count > 0 && b.unread_count === 0) return -1;
-    if (a.unread_count === 0 && b.unread_count > 0) return 1;
-    if (a.unread_count !== b.unread_count) return b.unread_count - a.unread_count;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-```
-
-1 file, ~6 lines added.
-
----
-
-### Summary
-
-- 3 files modified total
-- No database changes, no edge function changes
-- Removes a launch checklist item (RPC type casts)
-- Improves UX by surfacing unread conversations
+### No database changes needed
+`user_trust` table and `get-feature-flags` already exist with the required columns.
 
