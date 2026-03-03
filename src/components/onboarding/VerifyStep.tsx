@@ -394,7 +394,7 @@ const VerifyStep = ({ onComplete }: VerifyStepProps) => {
               Bring a Friend to this Drop
             </Button>
 
-            <Button variant="gold" size="lg" onClick={finishVerification} className="w-full group">
+            <Button variant="gold" size="lg" onClick={finishVerification} className="w-full group mt-3">
               <Sparkles className="mr-2 h-4 w-4" />
               Enter the Lobby
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
