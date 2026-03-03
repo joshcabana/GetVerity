@@ -1,74 +1,34 @@
 
 
-# Friendfluence Drops Feature
+## Analysis
 
-## Overview
+Everything is already wired:
 
-Create a dedicated Friendfluence page at `/drops/friendfluence` with invite link generation, realtime activity ticker, and friend invite form. Add a trigger button in onboarding Step 3 (VerifyStep "done" sub-step). Create a new edge function for generating friend invite codes.
+1. **Route**: `/drops/friendfluence` exists in `App.tsx` (line 70), lazy-loading `Friendfluence.tsx`.
+2. **VerifyStep "Bring a Friend" button**: Already present in the "done" sub-step (lines 387-395), linking to `/drops/friendfluence` with the next drop ID as a query param.
+3. **Edge function**: `generate-friend-invite` already exists.
+4. **Database**: A friendfluence drop already exists (`Music & Culture Double Date`, `is_friendfluence: true`), but the user wants a specific "Tech Professionals Friendfluence Test" drop.
 
-## Architecture
+## Plan
 
-```text
-VerifyStep "done" → "Bring a Friend" button → /drops/friendfluence
-                                                  ↓
-                                          Friendfluence.tsx
-                                          ├── Hero section
-                                          ├── Invite form (email/phone)
-                                          ├── Shareable magic link (edge fn)
-                                          ├── Live ticker (Supabase realtime on drop_rsvps)
-                                          └── Reward preview card
-```
+### 1. Seed test Friendfluence Drop
+Insert into `drops` table:
+- `title`: "Tech Professionals Friendfluence Test"
+- `room_id`: `c9d5c556-bf32-4216-b7f6-cbc17c4cd89a` (Tech Professionals room)
+- `scheduled_at`: `now() + interval '2 hours'`
+- `is_friendfluence`: `true`
+- `status`: `upcoming`
 
-## Files to Create/Modify
+### 2. Confirm VerifyStep button is live
+Already confirmed — the "Bring a Friend to this Drop" button exists at VerifyStep lines 387-395. No code change needed.
 
-### 1. NEW: `supabase/functions/generate-friend-invite/index.ts`
+### 3. Production polish
+Minor spacing fix in VerifyStep: the two buttons in the "done" sub-step (lines 387-401) have no gap between them. Add `space-y-3` wrapper or `mt-3` to the lobby button for proper visual separation.
 
-Edge function (authenticated) that:
-- Accepts `{ drop_id }` in body
-- Generates a unique `friend_invite_code` (nanoid-style, 8 chars using crypto)
-- Upserts into `drop_rsvps` with the code (user must be RSVP'd or auto-RSVPs them)
-- Returns `{ invite_url, code }` where URL is `https://getverity.com.au/drops/friendfluence?code=XXX&drop=YYY`
+### 4. No Netlify trigger needed
+This project deploys via Lovable's publish flow, not Netlify. The frontend is at `spark-echo-verity.lovable.app`. No action needed here — the user likely means "confirm it builds cleanly."
 
-Uses existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets. No new secrets needed.
-
-### 2. NEW: `src/pages/Friendfluence.tsx`
-
-Full page with sections:
-- **Hero**: "Bring a Friend · Get 2× Chemistry Score" with Shield icon, navy/amber branding
-- **Invite form**: Email input (or phone if `requirePhoneVerification` flag active), sends invite via clipboard share link (no email service needed — generates shareable URL)
-- **Live ticker**: Realtime subscription on `drop_rsvps` table filtered by friendfluence drops, showing "X friends just joined [Drop Title]" with Framer Motion enter animations
-- **Reward preview card**: "Mutual Spark = both get Verity Pass credit" with sparkle icon
-- **Share button**: Calls `generate-friend-invite` edge function, copies magic link to clipboard
-- Mobile-first layout matching onboarding aesthetic (max-w-sm, font-serif headings, trust bullets)
-
-### 3. MODIFY: `src/App.tsx`
-
-Add lazy route: `<Route path="/drops/friendfluence" element={<ProtectedRoute><Friendfluence /></ProtectedRoute>} />`
-
-### 4. MODIFY: `src/components/onboarding/VerifyStep.tsx`
-
-In the "done" sub-step (line ~369, before the "Enter the Lobby" button), add:
-```
-<Button variant="gold-outline" size="lg" onClick={() => navigate("/drops/friendfluence")} className="w-full">
-  <UserPlus /> Bring a Friend to this Drop
-</Button>
-```
-
-### 5. MODIFY: `supabase/config.toml`
-
-Add `[functions.generate-friend-invite]` with `verify_jwt = false` (auth validated in code).
-
-## No New Libraries
-
-Uses existing: Framer Motion, shadcn Button/Input/Card, lucide icons, Supabase realtime, react-router-dom.
-
-## No Schema Changes
-
-The `drop_rsvps` table already has a `friend_invite_code` column. The `drops` table already has `is_friendfluence` boolean. No migrations needed.
-
-## Privacy
-
-- Friend never sees inviter's identity until mutual spark
-- Invite code is opaque — no PII in URL
-- Friend gets standard onboarding flow before any matching
+### Files Modified
+- **VerifyStep.tsx**: Add `mt-3` to the "Enter the Lobby" button for spacing polish (1 line change).
+- **Database**: INSERT one row into `drops` table.
 
