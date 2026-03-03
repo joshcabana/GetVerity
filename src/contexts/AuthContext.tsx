@@ -6,7 +6,7 @@ import type { Tables } from "@/integrations/supabase/types";
 interface UserTrust {
   id: string;
   user_id: string;
-  dob: string | null;
+  age_verified: boolean;
   phone_verified: boolean;
   selfie_verified: boolean;
   safety_pledge_accepted: boolean;

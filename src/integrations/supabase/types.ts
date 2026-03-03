@@ -797,8 +797,8 @@ export type Database = {
       }
       user_trust: {
         Row: {
+          age_verified: boolean
           created_at: string
-          dob: string | null
           id: string
           onboarding_complete: boolean
           onboarding_step: number
@@ -810,8 +810,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          age_verified?: boolean
           created_at?: string
-          dob?: string | null
           id?: string
           onboarding_complete?: boolean
           onboarding_step?: number
@@ -823,8 +823,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          age_verified?: boolean
           created_at?: string
-          dob?: string | null
           id?: string
           onboarding_complete?: boolean
           onboarding_step?: number
@@ -870,6 +870,14 @@ export type Database = {
         }[]
       }
       get_drop_rsvp_count: { Args: { _drop_id: string }; Returns: number }
+      get_spark_partner_profile: {
+        Args: { _partner_user_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

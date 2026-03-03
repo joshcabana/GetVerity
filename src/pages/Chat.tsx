@@ -42,13 +42,10 @@ const Chat = () => {
       const pid = spark.user_a === user.id ? spark.user_b : spark.user_a;
       setPartnerId(pid);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", pid)
-        .single();
-      if (profile?.display_name) {
-        setPartnerName(profile.display_name.split(" ")[0]);
+      const { data: profiles } = await supabase
+        .rpc("get_spark_partner_profile", { _partner_user_id: pid });
+      if (profiles && profiles.length > 0 && profiles[0].display_name) {
+        setPartnerName(profiles[0].display_name.split(" ")[0]);
       }
     };
     fetchSpark();

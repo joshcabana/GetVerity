@@ -45,16 +45,20 @@ const SparkHistory = () => {
 
       const profileMap: Record<string, string> = {};
       if (uniqueIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, display_name")
-          .in("user_id", uniqueIds);
-        if (profiles) {
-          profiles.forEach((p) => {
-            const firstName = p.display_name?.split(" ")[0] || "Spark";
-            profileMap[p.user_id] = firstName;
-          });
-        }
+        // Use RPC to fetch only safe fields for spark partners
+        const results = await Promise.all(
+          uniqueIds.map((uid) =>
+            supabase.rpc("get_spark_partner_profile", { _partner_user_id: uid })
+          )
+        );
+        results.forEach(({ data: profiles }) => {
+          if (profiles) {
+            profiles.forEach((p: { user_id: string; display_name: string | null }) => {
+              const firstName = p.display_name?.split(" ")[0] || "Spark";
+              profileMap[p.user_id] = firstName;
+            });
+          }
+        });
       }
 
       return (data || []).map((s) => {

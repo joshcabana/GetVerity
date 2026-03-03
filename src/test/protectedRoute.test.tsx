@@ -97,7 +97,7 @@ describe("ProtectedRoute", () => {
       userTrust: {
         id: "trust-1",
         user_id: "user-1",
-        dob: null,
+        age_verified: false,
         phone_verified: true,
         selfie_verified: true,
         safety_pledge_accepted: true,
@@ -133,7 +133,7 @@ describe("ProtectedRoute", () => {
       userTrust: {
         id: "trust-1",
         user_id: "user-1",
-        dob: null,
+        age_verified: false,
         phone_verified: false,
         selfie_verified: true,
         safety_pledge_accepted: true,
@@ -181,7 +181,7 @@ describe("ProtectedRoute", () => {
       userTrust: {
         id: "trust-1",
         user_id: "user-1",
-        dob: null,
+        age_verified: false,
         phone_verified: false,
         selfie_verified: true,
         safety_pledge_accepted: true,
