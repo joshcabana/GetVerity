@@ -13,6 +13,7 @@ import SparkPassButtons from "@/components/call/SparkPassButtons";
 import GuardianNet from "@/components/call/GuardianNet";
 import SafeExitModal from "@/components/call/SafeExitModal";
 import MutualSparkReveal from "@/components/call/MutualSparkReveal";
+import VoiceIntro from "@/components/call/VoiceIntro";
 import { useAgoraCall } from "@/hooks/useAgoraCall";
 import { isModerationFlagged } from "@/lib/moderation";
 
@@ -23,6 +24,7 @@ type CallPhase =
   | "deciding"
   | "waiting"
   | "mutual-spark"
+  | "voice-intro"
   | "no-spark"
   | "complete";
 
@@ -91,6 +93,7 @@ const LiveCall = () => {
   const [callData, setCallData] = useState<CallRecord | null>(null);
   const [myRole, setMyRole] = useState<"caller" | "callee" | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [sparkId, setSparkId] = useState<string | null>(null);
 
   // Agora params
   const [agoraParams, setAgoraParams] = useState({ appId: "", token: null as string | null, uid: 0 });
@@ -370,11 +373,20 @@ const LiveCall = () => {
       .eq("call_id", callId)
       .single();
     if (spark) {
-      navigate(`/chat/${spark.id}`);
+      setSparkId(spark.id);
+      setPhase("voice-intro");
     } else {
       navigate("/sparks");
     }
   }, [callId, navigate]);
+
+  const handleVoiceIntroComplete = useCallback(() => {
+    if (sparkId) {
+      navigate(`/chat/${sparkId}`);
+    } else {
+      navigate("/sparks");
+    }
+  }, [sparkId, navigate]);
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col">
@@ -497,6 +509,11 @@ const LiveCall = () => {
         {/* MUTUAL SPARK */}
         {phase === "mutual-spark" && (
           <MutualSparkReveal onContinue={handleMutualSparkContinue} />
+        )}
+
+        {/* VOICE INTRO */}
+        {phase === "voice-intro" && sparkId && (
+          <VoiceIntro sparkId={sparkId} onComplete={handleVoiceIntroComplete} />
         )}
 
         {/* NO SPARK */}
