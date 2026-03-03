@@ -579,7 +579,7 @@ const LiveCall = () => {
         </div>
       )}
 
-      <GuardianNet open={guardianOpen} onClose={() => setGuardianOpen(false)} />
+      <GuardianNet open={guardianOpen} onClose={() => setGuardianOpen(false)} callId={callId || ""} />
       <SafeExitModal open={exitOpen} onClose={() => setExitOpen(false)} onConfirm={handleSafeExit} />
     </div>
   );

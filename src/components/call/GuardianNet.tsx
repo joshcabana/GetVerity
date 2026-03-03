@@ -1,13 +1,30 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Shield, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GuardianNetProps {
   open: boolean;
   onClose: () => void;
+  callId: string;
 }
 
-const GuardianNet = ({ open, onClose }: GuardianNetProps) => {
+const GuardianNet = ({ open, onClose, callId }: GuardianNetProps) => {
+  const { user } = useAuth();
+  const loggedRef = useRef(false);
+
+  useEffect(() => {
+    if (!open || !callId || !user || loggedRef.current) return;
+    loggedRef.current = true;
+    supabase.from("guardian_alerts").insert({ call_id: callId, user_id: user.id }).then();
+  }, [open, callId, user]);
+
+  useEffect(() => {
+    if (!open) loggedRef.current = false;
+  }, [open]);
+
   if (!open) return null;
 
   const endTime = new Date();
