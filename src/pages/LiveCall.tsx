@@ -171,10 +171,34 @@ const LiveCall = () => {
     }
   }, [isJoined, phase]);
 
+  // Start cloud recording when phase becomes live
+  useEffect(() => {
+    if (phase !== "live" || !callId || !channelFromUrl) return;
+    supabase.functions.invoke("start-cloud-recording", {
+      body: { call_id: callId, channel: channelFromUrl },
+    }).then(({ data }) => {
+      if (data?.skipped) {
+        console.log("Cloud recording skipped:", data.reason);
+      } else if (data?.started) {
+        console.log("Cloud recording started");
+      }
+    }).catch((err) => {
+      console.warn("Cloud recording start failed (non-blocking):", err);
+    });
+  }, [phase, callId, channelFromUrl]);
+
   // Countdown
   useEffect(() => {
     if (phase !== "live") return;
     if (secondsLeft <= 0) {
+      // Stop cloud recording when transitioning to deciding
+      if (callId && channelFromUrl) {
+        supabase.functions.invoke("stop-cloud-recording", {
+          body: { call_id: callId, channel: channelFromUrl },
+        }).catch((err) => {
+          console.warn("Cloud recording stop failed (non-blocking):", err);
+        });
+      }
       setPhase("deciding");
       return;
     }

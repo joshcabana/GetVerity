@@ -78,7 +78,16 @@ serve(async (req) => {
       });
     }
 
-    // Create replay record (MVP: processing → ready placeholder)
+    // Fetch recording URL from the call
+    const { data: call } = await adminClient
+      .from("calls")
+      .select("recording_url")
+      .eq("id", spark.call_id)
+      .single();
+
+    const recordingUrl = call?.recording_url || null;
+
+    // Create replay record
     const { data: replay, error: insertError } = await adminClient
       .from("chemistry_replays")
       .insert({
@@ -86,7 +95,8 @@ serve(async (req) => {
         call_id: spark.call_id,
         user_a: spark.user_a,
         user_b: spark.user_b,
-        status: "processing",
+        status: recordingUrl ? "ready" : "processing",
+        video_url: recordingUrl,
       })
       .select("id")
       .single();
@@ -99,13 +109,19 @@ serve(async (req) => {
       });
     }
 
-    // MVP: mark as ready immediately (placeholder until Agora Cloud Recording integration)
-    await adminClient
-      .from("chemistry_replays")
-      .update({ status: "ready" })
-      .eq("id", replay.id);
+    // If no recording URL, mark as failed (no cloud recording configured)
+    if (!recordingUrl) {
+      await adminClient
+        .from("chemistry_replays")
+        .update({ status: "failed" })
+        .eq("id", replay.id);
+    }
 
-    return new Response(JSON.stringify({ replay_id: replay.id, status: "ready" }), {
+    return new Response(JSON.stringify({
+      replay_id: replay.id,
+      status: recordingUrl ? "ready" : "failed",
+      has_recording: !!recordingUrl,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

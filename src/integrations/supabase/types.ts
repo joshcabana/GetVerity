@@ -91,6 +91,9 @@ export type Database = {
           ended_at: string | null
           id: string
           is_mutual_spark: boolean | null
+          recording_resource_id: string | null
+          recording_sid: string | null
+          recording_url: string | null
           room_id: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["call_status"] | null
@@ -106,6 +109,9 @@ export type Database = {
           ended_at?: string | null
           id?: string
           is_mutual_spark?: boolean | null
+          recording_resource_id?: string | null
+          recording_sid?: string | null
+          recording_url?: string | null
           room_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["call_status"] | null
@@ -121,6 +127,9 @@ export type Database = {
           ended_at?: string | null
           id?: string
           is_mutual_spark?: boolean | null
+          recording_resource_id?: string | null
+          recording_sid?: string | null
+          recording_url?: string | null
           room_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["call_status"] | null
