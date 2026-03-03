@@ -1,46 +1,67 @@
 
 
-## Plan: GuardianNet Server-Side Logging
+## Plan: VoiceIntroBanner Playback + Tests + PROJECT_OVERVIEW Update
 
-### Migration: `guardian_alerts` table
+### Files to Create/Modify
 
-```sql
-CREATE TABLE public.guardian_alerts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  call_id UUID REFERENCES public.calls(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
+| File | Action |
+|------|--------|
+| `src/components/chat/VoiceIntroBanner.tsx` | Rewrite with real signed-URL audio playback |
+| `src/pages/Chat.tsx` | Fetch `voice_intro_a`, `voice_intro_b`, `user_a` from spark; render banner |
+| `src/test/VoiceIntro.test.tsx` | Unit tests for VoiceIntro capture flow |
+| `src/test/GuardianNet.test.tsx` | Unit tests for GuardianNet alert logging |
+| `PROJECT_OVERVIEW.md` | Mark Voice Intro + Guardian Net complete, add date, note beta-ready |
 
-ALTER TABLE public.guardian_alerts ENABLE ROW LEVEL SECURITY;
+No migration needed — `voice-intros` bucket and spark columns already exist.
 
-CREATE POLICY "Users can log own alerts"
-  ON public.guardian_alerts FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+---
 
-CREATE POLICY "Admins can view all alerts"
-  ON public.guardian_alerts FOR SELECT TO authenticated
-  USING (has_role(auth.uid(), 'admin'::app_role));
+### VoiceIntroBanner.tsx
+
+**New props:**
+```typescript
+interface VoiceIntroBannerProps {
+  storagePath: string;
+  matchName: string;
+}
 ```
 
-Note: Using `has_role` for admin SELECT (matching existing pattern) instead of open `true`.
+**Logic:**
+- On mount: call `supabase.storage.from('voice-intros').createSignedUrl(storagePath, 3600)`
+- States: `loading` (skeleton pulse), `error` ("Unavailable" muted text), `ready` (player)
+- `useRef<HTMLAudioElement>` for playback; `timeupdate` event drives waveform progress
+- `loadedmetadata` event sets actual duration (displayed as `M:SS`)
+- `useMemo` stabilizes random waveform bar heights across re-renders
+- Play/Pause toggle on existing button; `onended` resets state
+- Preserve existing Framer Motion animation, gold/dark Tailwind classes, and layout structure
 
-### GuardianNet.tsx
+### Chat.tsx
 
-- Add `callId: string` to props interface
-- Import `supabase` and `useAuth`
-- On modal open (inside the component body, after the early return), fire-and-forget insert into `guardian_alerts` with `call_id` and `user_id`
-- Zero UI changes — all existing JSX, Framer Motion, Tailwind untouched
+**Changes (minimal):**
+- Expand spark fetch to select `voice_intro_a, voice_intro_b, user_a` alongside `user_a, user_b`
+- New state: `partnerVoicePath: string | null`
+- Determine partner path: if user is `user_a` → `voice_intro_b`, else `voice_intro_a`
+- Above the message list, render:
+  - If path exists and is not `"skipped"`: `<VoiceIntroBanner storagePath={path} matchName={partnerName} />`
+  - If path is `"skipped"`: small muted text "They skipped their voice intro"
+  - If path is null: nothing
 
-### LiveCall.tsx
+### Test Files
 
-- Line 582: pass `callId={callId || ""}` to `<GuardianNet>`
+**VoiceIntro.test.tsx** — mock `supabase`, `navigator.mediaDevices`, test:
+- Phase transitions (intro → recording → recorded → listening → done)
+- Skip writes `"skipped"` to DB
+- Upload calls storage + updates spark column
 
-### Files Modified
+**GuardianNet.test.tsx** — mock `supabase`, `useAuth`, test:
+- Opening modal inserts into `guardian_alerts`
+- Only logs once per open (loggedRef guard)
+- Does not log when closed
 
-| File | Change |
-|------|--------|
-| New migration SQL | `guardian_alerts` table + RLS |
-| `src/components/call/GuardianNet.tsx` | Add `callId` prop, log to DB on open |
-| `src/pages/LiveCall.tsx` | Pass `callId` prop to GuardianNet |
+### PROJECT_OVERVIEW.md
+
+- Phase 4 row: change "Roadmap" → "Complete"
+- Add Voice Intro and Guardian Net to §3.1 Completed list
+- Update date to March 3, 2026
+- Add "Beta-ready" note at top
 
