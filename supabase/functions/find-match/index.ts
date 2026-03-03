@@ -33,6 +33,30 @@ serve(async (req) => {
     const { drop_id, room_id } = await req.json();
     if (!drop_id || !room_id) throw new Error("drop_id and room_id required");
 
+    // Server-side trust gate: verify user has completed identity checks
+    const { data: trust, error: trustErr } = await admin
+      .from("user_trust")
+      .select("selfie_verified, safety_pledge_accepted, phone_verified")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (trustErr || !trust) throw new Error("Trust verification failed");
+    if (!trust.selfie_verified || !trust.safety_pledge_accepted) {
+      throw new Error("Identity verification incomplete");
+    }
+
+    // Check phone requirement from feature flags
+    const { data: phoneFlag } = await admin
+      .from("app_config")
+      .select("value_json")
+      .eq("key", "feature_flags")
+      .maybeSingle();
+
+    const requirePhone = (phoneFlag?.value_json as Record<string, boolean> | null)?.require_phone_verification ?? true;
+    if (requirePhone && !trust.phone_verified) {
+      throw new Error("Phone verification required");
+    }
+
     // Verify drop exists and is live
     const { data: drop, error: dropErr } = await admin
       .from("drops")
@@ -186,6 +210,9 @@ serve(async (req) => {
       "Matchmaking temporarily unavailable",
       "Failed to create call",
       "Failed to finalize match",
+      "Trust verification failed",
+      "Identity verification incomplete",
+      "Phone verification required",
     ];
     const msg = safeMessages.includes(errorMessage) ? errorMessage : "An error occurred";
     return new Response(

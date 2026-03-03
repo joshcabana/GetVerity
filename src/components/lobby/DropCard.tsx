@@ -142,10 +142,22 @@ const DropCard = ({ drop, rsvpCount, isRsvpd, onRsvp, onCancel, onJoin, trustCom
             </Button>
           )}
         </div>
-      ) : (
+      ) : trustComplete ? (
         <Button variant="gold" size="sm" className="w-full group" onClick={() => onRsvp(drop.id)}>
           RSVP
         </Button>
+      ) : (
+        <div>
+          <Button variant="gold" size="sm" className="w-full" disabled>
+            RSVP
+          </Button>
+          <p className="text-[11px] text-muted-foreground mt-2 text-center">
+            <Link to="/onboarding" className="text-primary hover:text-primary/80">
+              Complete verification
+            </Link>{" "}
+            to RSVP for Drops.
+          </p>
+        </div>
       )}
     </motion.div>
   );
