@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import MessageBubble from "@/components/chat/MessageBubble";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import ChatComposer from "@/components/chat/ChatComposer";
+import VoiceIntroBanner from "@/components/chat/VoiceIntroBanner";
 
 interface Message {
   id: string;
@@ -27,6 +28,7 @@ const Chat = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [partnerName, setPartnerName] = useState("Spark");
   const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [partnerVoicePath, setPartnerVoicePath] = useState<string | null>(null);
 
   // Fetch spark data
   useEffect(() => {
@@ -34,13 +36,17 @@ const Chat = () => {
     const fetchSpark = async () => {
       const { data: spark } = await supabase
         .from("sparks")
-        .select("user_a, user_b")
+        .select("user_a, user_b, voice_intro_a, voice_intro_b")
         .eq("id", sparkId)
         .single();
       if (!spark) return;
 
       const pid = spark.user_a === user.id ? spark.user_b : spark.user_a;
       setPartnerId(pid);
+
+      // Determine partner's voice intro path
+      const voicePath = spark.user_a === user.id ? spark.voice_intro_b : spark.voice_intro_a;
+      setPartnerVoicePath(voicePath ?? null);
 
       const { data: profiles } = await supabase
         .rpc("get_spark_partner_profile", { _partner_user_id: pid });
@@ -192,6 +198,14 @@ const Chat = () => {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {partnerVoicePath && partnerVoicePath !== "skipped" && (
+          <VoiceIntroBanner storagePath={partnerVoicePath} matchName={partnerName} />
+        )}
+        {partnerVoicePath === "skipped" && (
+          <p className="text-center text-[11px] text-muted-foreground/50 py-2">
+            They skipped their voice intro
+          </p>
+        )}
         {messages.length === 0 && (
           <div className="text-center py-12">
             <p className="text-sm text-muted-foreground">You sparked! Say hello.</p>

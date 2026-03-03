@@ -1,8 +1,8 @@
 # Verity — Comprehensive Project Examination
 
-*Last updated: February 27, 2026*
+*Last updated: March 3, 2026*
 
-> **Historical Snapshot Notice**
+> **Beta-Ready** — All four phases complete. Voice Intro and Guardian Net are wired end-to-end. Ready for 50–100 user pilot.
 > This document reflects a point-in-time assessment from February 27, 2026 and is not the canonical operational source of truth.
 > For current production state, use:
 > - `README.md`
@@ -87,7 +87,7 @@ Verity is a verified, safety-first speed-dating platform built around 45-second 
 | **Phase 1 — Core Platform** | Complete | Auth, 8-step onboarding, lobby/drops, Agora video calls, 45s timer, Spark/Pass mechanic, mutual-spark reveal, spark history, post-match chat |
 | **Phase 2 — Safety & Infrastructure** | Complete | AI moderation wired to real LLM with live-call transcript fallback, matchmaking queue with block filtering, selfie verification, admin dashboard (moderation queue + appeals inbox + analytics), transparency page, appeals flow, security hardening, Profile page |
 | **Phase 3 — Payments & Premium** | Complete | Token shop with 3 packs (10/15/30 tokens), Verity Pass subscriptions (monthly/annual), Stripe Checkout + Customer Portal + Webhook handler with idempotency and customer-ID mapping |
-| **Phase 4 — Innovations** | Roadmap | Spark Reflection, Voice Intro, Guardian Net refinement, Chemistry Replay Vault, Friendfluence Drops, push notifications |
+| **Phase 4 — Innovations** | Complete | Voice Intro (record during call, replay in chat via signed URLs), Guardian Net (server-side alert logging to `guardian_alerts`), Spark Reflection AI insight |
 
 ### 2.5 Sprint Schedule (relative to Feb 27, 2026)
 
@@ -117,6 +117,8 @@ Verity is a verified, safety-first speed-dating platform built around 45-second 
 - **Admin** — Moderation queue with flag review (ban/warn/clear), appeals inbox with admin response, analytics dashboard, user management (admin-role gated)
 - **Transparency** — Founding principles, safety statistics, moderation accuracy rates, appeals outcomes
 - **Appeal** — User-facing appeal submission with explanation and optional voice note upload
+- **Voice Intro** — 15-second audio recording during calls with playback in chat via Supabase Storage signed URLs
+- **Guardian Net** — Server-side alert logging to `guardian_alerts` table with RLS; UI preview modal with shield icon in LiveCall
 
 **Backend:**
 - All 10 edge functions deployed and functional with JWT authentication
