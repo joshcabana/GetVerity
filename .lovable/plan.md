@@ -1,34 +1,31 @@
 
 
-## Analysis
+## Plan: Final Production Polish + Launch Lock
 
-Everything is already wired:
+### 1. Update test Friendfluence Drop scheduled_at
+- UPDATE the drop with ID `2f97af95-4a62-4724-abff-718fa6c5eaa7` to set `scheduled_at = NOW() + interval '3 hours'` so it remains "upcoming".
+- Uses the data insert tool (not migration).
 
-1. **Route**: `/drops/friendfluence` exists in `App.tsx` (line 70), lazy-loading `Friendfluence.tsx`.
-2. **VerifyStep "Bring a Friend" button**: Already present in the "done" sub-step (lines 387-395), linking to `/drops/friendfluence` with the next drop ID as a query param.
-3. **Edge function**: `generate-friend-invite` already exists.
-4. **Database**: A friendfluence drop already exists (`Music & Culture Double Date`, `is_friendfluence: true`), but the user wants a specific "Tech Professionals Friendfluence Test" drop.
+### 2. Fix forwardRef console warnings
+Console logs show two warnings, both from the `Landing` page:
+- **CTASection** -- plain function component receiving a ref
+- **Footer** -- plain function component receiving a ref
 
-## Plan
+**Root cause**: React's internal reconciliation (via Suspense/lazy) attempts to attach refs to these child components. Since they're plain function components, the ref is silently dropped and a dev warning is logged.
 
-### 1. Seed test Friendfluence Drop
-Insert into `drops` table:
-- `title`: "Tech Professionals Friendfluence Test"
-- `room_id`: `c9d5c556-bf32-4216-b7f6-cbc17c4cd89a` (Tech Professionals room)
-- `scheduled_at`: `now() + interval '2 hours'`
-- `is_friendfluence`: `true`
-- `status`: `upcoming`
+**Fix**: Wrap both components with `React.forwardRef` and forward the ref to their root element. No logic changes -- just ref plumbing.
 
-### 2. Confirm VerifyStep button is live
-Already confirmed — the "Bring a Friend to this Drop" button exists at VerifyStep lines 387-395. No code change needed.
+#### Files modified
+| File | Change |
+|------|--------|
+| `src/components/landing/CTASection.tsx` | Wrap with `forwardRef`, forward ref to `<section>` |
+| `src/components/landing/Footer.tsx` | Wrap with `forwardRef`, forward ref to `<footer>` |
 
-### 3. Production polish
-Minor spacing fix in VerifyStep: the two buttons in the "done" sub-step (lines 387-401) have no gap between them. Add `space-y-3` wrapper or `mt-3` to the lobby button for proper visual separation.
+### 3. Deployment
+- Changes auto-sync to the connected GitHub repo (`joshcabana/GetVerity`) via the Lovable publish flow. There is no manual "force push" or Netlify trigger available from within Lovable -- publishing the project pushes to GitHub, which triggers any connected CI/CD (Netlify).
+- The live preview at `spark-echo-verity.lovable.app` updates immediately after publish.
 
-### 4. No Netlify trigger needed
-This project deploys via Lovable's publish flow, not Netlify. The frontend is at `spark-echo-verity.lovable.app`. No action needed here — the user likely means "confirm it builds cleanly."
-
-### Files Modified
-- **VerifyStep.tsx**: Add `mt-3` to the "Enter the Lobby" button for spacing polish (1 line change).
-- **Database**: INSERT one row into `drops` table.
+### 4. Scope exclusions
+- VerityLogo, Navbar, HeroSection, StatsSection, FeaturesSection, InnovationsSection do not appear in console warnings -- no changes needed.
+- No schema migrations required.
 
