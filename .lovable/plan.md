@@ -1,30 +1,38 @@
 
 
-## Recommendation: Enforce Trust Gates on Drop Participation
+## Plan: Production Polish Pass
 
-### Why this is next
+Three concrete improvements that clear remaining launch checklist items and clean up the developer experience.
 
-Trust gate enforcement is the most important remaining item for pilot readiness. Currently, onboarding collects phone/selfie/pledge data, but there's no hard block preventing unverified users from RSVPing to Drops or joining calls. This is a safety requirement — every user in a live call must be identity-verified.
+---
 
-### What changes
+### Task 1: Update `.lovable/plan.md` — replace stale content
 
-**1. Lobby page — block RSVP for unverified users**
-- In `src/pages/Lobby.tsx`, check `userTrust` from `useAuth()` before allowing RSVP
-- If trust requirements are incomplete, show a prompt directing the user to complete onboarding instead of the RSVP button
-- Respect the `requirePhoneVerification` feature flag (some deployments may not require phone)
+The current plan still describes trust gate enforcement, which is already shipped. Replace with the current launch checklist: Chemistry Replay Vault, AI moderation tuning, production config items, and bundle optimization.
 
-**2. LiveCall page — server-side guard**
-- The `find-match` edge function should verify the caller's trust status before matching
-- Add a check in `supabase/functions/find-match/index.ts` that queries `user_trust` for the authenticated user and rejects if `selfie_verified`, `safety_pledge_accepted`, or `phone_verified` (when required) are false
+**File:** `.lovable/plan.md`
 
-**3. ProtectedRoute — add `requireTrust` to Lobby and LiveCall routes**
-- `ProtectedRoute` already has a `requireTrust` prop — wire it into the route definitions for `/lobby` and `/live-call` in `App.tsx`
+---
 
-### Files modified
-- `src/App.tsx` — add `requireTrust` to Lobby and LiveCall routes
-- `src/pages/Lobby.tsx` — disable RSVP button with verification prompt for unverified users
-- `supabase/functions/find-match/index.ts` — server-side trust check before matching
+### Task 2: Fix `LazyFallback` forwardRef console warning
 
-### No database changes needed
-`user_trust` table and `get-feature-flags` already exist with the required columns.
+The console shows "Function components cannot be given refs... at LazyFallback". The `LazyFallback` component in `App.tsx` is a plain function component. Wrapping it with `React.forwardRef` silences this warning, consistent with the forwardRef fixes already applied to landing components.
+
+**File:** `src/App.tsx` — wrap `LazyFallback` with `forwardRef` and add `.displayName`
+
+---
+
+### Task 3: Add React Router v7 future flags
+
+Console shows deprecation warnings about `v7_startTransition`. Adding the `future` prop to `BrowserRouter` opts in early and silences warnings.
+
+**File:** `src/App.tsx` — add `future={{ v7_startTransition: true }}` to `<BrowserRouter>`
+
+---
+
+### Summary
+
+- 2 files modified: `src/App.tsx`, `.lovable/plan.md`
+- No database changes, no edge function changes
+- Clears console warnings and updates stale documentation
 
