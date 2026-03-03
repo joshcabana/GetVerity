@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { User } from "lucide-react";
+import { User, Mic, MicOff } from "lucide-react";
 
 interface SparkData {
   id: string;
   created_at: string;
   is_archived: boolean | null;
   partner_name: string;
+  partner_voice_status?: "available" | "skipped" | "none";
 }
 
 interface SparkCardProps {
@@ -27,6 +28,7 @@ function timeAgo(dateStr: string): string {
 
 const SparkCard = ({ spark, index }: SparkCardProps) => {
   const navigate = useNavigate();
+  const voiceStatus = spark.partner_voice_status ?? "none";
 
   return (
     <motion.button
@@ -41,6 +43,17 @@ const SparkCard = ({ spark, index }: SparkCardProps) => {
         <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center border border-border">
           <User className="w-6 h-6 text-muted-foreground/60" />
         </div>
+        {/* Voice intro indicator badge */}
+        {voiceStatus === "available" && (
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center">
+            <Mic className="w-2.5 h-2.5 text-primary" />
+          </div>
+        )}
+        {voiceStatus === "skipped" && (
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-muted border border-border flex items-center justify-center">
+            <MicOff className="w-2.5 h-2.5 text-muted-foreground/50" />
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -53,7 +66,9 @@ const SparkCard = ({ spark, index }: SparkCardProps) => {
           </span>
         </div>
         <p className="text-xs text-muted-foreground truncate">
-          Say hello…
+          {voiceStatus === "available"
+            ? "🎙️ Voice intro available"
+            : "Say hello…"}
         </p>
       </div>
     </motion.button>

@@ -18,8 +18,11 @@ interface SparkWithPartner {
   created_at: string;
   is_archived: boolean | null;
   ai_insight: string | null;
+  voice_intro_a: string | null;
+  voice_intro_b: string | null;
   partner_id: string;
   partner_name: string;
+  partner_voice_status: "available" | "skipped" | "none";
 }
 
 const SparkHistory = () => {
@@ -32,7 +35,7 @@ const SparkHistory = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from("sparks")
-        .select("id, call_id, user_a, user_b, created_at, is_archived, ai_insight")
+        .select("id, call_id, user_a, user_b, created_at, is_archived, ai_insight, voice_intro_a, voice_intro_b")
         .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -63,10 +66,14 @@ const SparkHistory = () => {
 
       return (data || []).map((s) => {
         const partnerId = s.user_a === user.id ? s.user_b : s.user_a;
+        const partnerVoice = s.user_a === user.id ? s.voice_intro_b : s.voice_intro_a;
+        const voiceStatus: "available" | "skipped" | "none" =
+          !partnerVoice ? "none" : partnerVoice === "skipped" ? "skipped" : "available";
         return {
           ...s,
           partner_id: partnerId,
           partner_name: profileMap[partnerId] || `Spark ${s.id.slice(-4)}`,
+          partner_voice_status: voiceStatus,
         };
       });
     },
