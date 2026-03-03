@@ -1,3 +1,4 @@
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,41 +45,43 @@ const LazyFallback = () => (
 );
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <ErrorBoundary>
-              <AppHeader />
-              <PushNotificationManager />
-              <Suspense fallback={<LazyFallback />}>
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/lobby" element={<ProtectedRoute requireTrust><Lobby /></ProtectedRoute>} />
-                  <Route path="/call/:callId" element={<ProtectedRoute requireTrust><LiveCall /></ProtectedRoute>} />
-                  <Route path="/sparks" element={<ProtectedRoute requireTrust><SparkHistory /></ProtectedRoute>} />
-                  <Route path="/chat/:sparkId" element={<ProtectedRoute requireTrust><Chat /></ProtectedRoute>} />
-                  <Route path="/tokens" element={<ProtectedRoute><TokenShop /></ProtectedRoute>} />
-                  <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
-                  <Route path="/transparency" element={<Transparency />} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/appeal" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
-                  <Route path="/appeal/:flagId" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
-                  <Route path="/drops/friendfluence" element={<ProtectedRoute><Friendfluence /></ProtectedRoute>} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <HelmetProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <ErrorBoundary>
+                <AppHeader />
+                <PushNotificationManager />
+                <Suspense fallback={<LazyFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path="/lobby" element={<ProtectedRoute requireTrust><Lobby /></ProtectedRoute>} />
+                    <Route path="/call/:callId" element={<ProtectedRoute requireTrust><LiveCall /></ProtectedRoute>} />
+                    <Route path="/sparks" element={<ProtectedRoute requireTrust><SparkHistory /></ProtectedRoute>} />
+                    <Route path="/chat/:sparkId" element={<ProtectedRoute requireTrust><Chat /></ProtectedRoute>} />
+                    <Route path="/tokens" element={<ProtectedRoute><TokenShop /></ProtectedRoute>} />
+                    <Route path="/admin" element={<ProtectedRoute requireAdmin><Admin /></ProtectedRoute>} />
+                    <Route path="/transparency" element={<Transparency />} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="/appeal" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
+                    <Route path="/appeal/:flagId" element={<ProtectedRoute><Appeal /></ProtectedRoute>} />
+                    <Route path="/drops/friendfluence" element={<ProtectedRoute><Friendfluence /></ProtectedRoute>} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  </HelmetProvider>
 );
 
 export default App;
