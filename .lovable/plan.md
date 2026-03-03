@@ -1,91 +1,91 @@
 
 
-## Plan: Chemistry Replay Vault + Bundle Optimization + Console Cleanup
+## Plan: Agora Cloud Recording + Console Warnings + Vault UI Verification
 
-Three parallel workstreams. Here is what each involves.
+Three workstreams: integrate Agora Cloud Recording for real 8-second clips, fix the two remaining `forwardRef` warnings, and verify the Vault UI.
 
 ---
 
 ### 1. Fix Remaining Console Warnings
 
-The console shows three forwardRef warnings for `PushNotificationManager`, `Routes`, and `Landing`. The `Routes` warning is internal to react-router and cannot be fixed. The other two are actionable:
+The console shows `forwardRef` warnings for **`AuthProvider`** and **`AppHeader`**. Both are rendered as direct children in `App.tsx` and receive ref validation. The `Routes` warning is internal to react-router and unfixable.
 
-- **`PushNotificationManager`**: Wrap with `forwardRef` (same pattern as `LazyFallback`)
-- **`Landing`**: This fires because `React.lazy` components receive ref validation. The fix is the same — wrap the default export with `forwardRef`
+- **`src/components/AppHeader.tsx`** — wrap with `forwardRef`
+- **`src/contexts/AuthContext.tsx`** — the `AuthProvider` component needs `forwardRef` wrapping
 
-**Files:** `src/components/PushNotificationManager.tsx`, `src/pages/Landing.tsx`
+**Files:** `src/components/AppHeader.tsx`, `src/contexts/AuthContext.tsx`
 
 ---
 
-### 2. Bundle Size Optimization
+### 2. Agora Cloud Recording Integration
 
-No manual chunk splitting is configured. The Agora SDK (~500KB), Framer Motion (~120KB), Recharts (~200KB), and Radix UI primitives are all bundled into a single chunk.
+Agora Cloud Recording is a server-side API that records channels. The flow:
 
-Add Rollup `manualChunks` to `vite.config.ts`:
+1. **New edge function `start-cloud-recording`** — called when a live call starts, it hits the Agora Cloud Recording REST API to begin recording the channel
+2. **New edge function `stop-cloud-recording`** — called when the call ends (at the "deciding" phase), stops recording and gets the file URL
+3. **Modify `generate-replay`** — instead of immediately marking as "ready", it extracts the last 8 seconds from the recorded file URL and stores it
+
+#### Architecture
 
 ```text
-vendor-agora    → agora-rtc-sdk-ng
-vendor-motion   → framer-motion
-vendor-charts   → recharts, d3-*
-vendor-radix    → @radix-ui/*
-vendor-router   → react-router-dom, react-router
+Call starts → start-cloud-recording → Agora records to cloud storage
+Call ends   → stop-cloud-recording  → gets recording URL
+Mutual spark → generate-replay      → trims to 8s, stores in chemistry_replays
 ```
 
-This splits the main bundle into parallelizable chunks that cache independently.
+#### Edge Function: `start-cloud-recording`
+- Called from `LiveCall.tsx` when phase transitions to `"live"`
+- Hits Agora Cloud Recording `acquire` then `start` REST endpoints
+- Stores `resourceId` and `sid` in the `calls` table (new columns: `recording_resource_id`, `recording_sid`)
+- Requires `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE` (already configured), plus Agora REST API credentials (`AGORA_CUSTOMER_KEY`, `AGORA_CUSTOMER_SECRET` — new secrets needed)
 
-**File:** `vite.config.ts`
+#### Edge Function: `stop-cloud-recording`
+- Called from `LiveCall.tsx` when the countdown ends (phase → deciding)
+- Hits Agora Cloud Recording `stop` endpoint using stored `resourceId`/`sid`
+- Returns the recording file URL
+- Updates `calls` with `recording_url`
+
+#### Database Changes
+- Add columns to `calls`: `recording_resource_id text`, `recording_sid text`, `recording_url text`
+
+#### Client Changes (`LiveCall.tsx`)
+- When phase becomes `"live"`, invoke `start-cloud-recording`
+- When countdown ends (phase → `"deciding"`), invoke `stop-cloud-recording`
+
+#### Update `generate-replay`
+- Instead of placeholder "ready", use the `recording_url` from the call to set `video_url` on the chemistry replay
+- Mark as `"ready"` only if recording URL exists, otherwise `"failed"`
+
+#### New Secrets Required
+Agora Cloud Recording needs REST API credentials:
+- `AGORA_CUSTOMER_KEY` — from Agora Console → RESTful API
+- `AGORA_CUSTOMER_SECRET` — from Agora Console → RESTful API
+
+These must be configured before the feature works. The edge functions will gracefully degrade (skip recording) if not set.
+
+**Files:**
+- New: `supabase/functions/start-cloud-recording/index.ts`
+- New: `supabase/functions/stop-cloud-recording/index.ts`
+- Modified: `supabase/functions/generate-replay/index.ts`
+- Modified: `src/pages/LiveCall.tsx`
+- Database migration: add 3 columns to `calls`
 
 ---
 
-### 3. Chemistry Replay Vault
+### 3. Verify Vault UI
 
-A premium feature that stores an 8-second anonymized highlight "moment" from mutual-spark calls, viewable only by Verity Pass subscribers.
-
-#### Database
-
-New table `chemistry_replays`:
-- `id` uuid PK
-- `spark_id` uuid (references sparks)
-- `call_id` uuid
-- `user_a` uuid, `user_b` uuid
-- `video_url` text (storage path to anonymized clip)
-- `duration_seconds` int default 8
-- `created_at` timestamptz
-- `status` text default 'processing' (processing | ready | failed)
-
-RLS: participants can SELECT their own replays. No client INSERT/UPDATE/DELETE (server-only writes).
-
-#### Edge Function: `generate-replay`
-
-Triggered after a mutual spark is confirmed. In the MVP, this:
-1. Validates the caller is a participant
-2. Creates a `chemistry_replays` row with status `processing`
-3. Returns the replay ID
-
-The actual video processing (extracting 8s from Agora cloud recording) is a future integration point — the MVP creates the record and marks it `ready` with a placeholder. This keeps the architecture in place for when Agora Cloud Recording is configured.
-
-#### UI: Replay Vault Tab
-
-Add a "Vault" section to the Sparks page (or a new `/vault` route):
-- Lists chemistry replays for the current user
-- Each card shows partner name, timestamp, and a play button
-- Non-subscribers see a blurred preview with a "Unlock with Verity Pass" CTA
-- Subscribers can tap to play the 8-second clip
-
-**Files:**
-- New: `src/components/vault/ReplayCard.tsx`, `src/components/vault/ReplayVault.tsx`
-- New: `supabase/functions/generate-replay/index.ts`
-- Modified: `src/pages/SparkHistory.tsx` (add Vault tab)
-- Modified: `src/App.tsx` (no new route needed — tab within sparks)
-- Database migration: create `chemistry_replays` table + RLS
+After implementing, navigate to `/sparks` in the browser to confirm:
+- Sparks/Vault tabs render correctly
+- Vault empty state displays properly
+- Tab switching works
 
 ---
 
 ### Summary
 
-| Task | Files | DB changes |
-|------|-------|------------|
-| Console warnings | 2 files | None |
-| Bundle splitting | 1 file | None |
-| Chemistry Replay Vault | 4 new + 1 modified | 1 new table |
+| Task | Files | DB changes | Secrets |
+|------|-------|------------|---------|
+| Console warnings | 2 files | None | None |
+| Cloud Recording | 4 files (2 new edge fns) | 3 new columns on `calls` | 2 new Agora REST creds |
+| Vault verification | Browser test | None | None |
 
