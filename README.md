@@ -48,12 +48,12 @@
 - Stripe webhook handler with idempotency and customer-ID mapping
 - Token balance and transaction history tracking
 
-### Phase 4 — Innovations 📋 Roadmap
-- **Spark Reflection** — private post-call AI insight (tone/energy analysis, no transcript)
-- **Verity Voice Intro** — optional 15-second voice note before text chat unlocks after mutual spark
-- **Guardian Net** — one-tap safe-call signal to a trusted friend
-- **Chemistry Replay Vault** — private 8-second anonymised highlight reel (Verity Pass only)
-- **Friendfluence Drops** — invite a friend to the same Drop for shared courage
+### Phase 4 — Innovations 🔄 Partial
+- **Friendfluence Drops** ✅ — invite a friend to the same Drop for shared courage (UI + invite link generation live at `/drops/friendfluence`)
+- **Spark Reflection** 📋 — private post-call AI insight (tone/energy analysis, no transcript)
+- **Verity Voice Intro** 📋 — optional 15-second voice note before text chat unlocks after mutual spark
+- **Guardian Net** 📋 — one-tap safe-call signal to a trusted friend
+- **Chemistry Replay Vault** 📋 — private 8-second anonymised highlight reel (Verity Pass only)
 
 ---
 
@@ -66,14 +66,17 @@
 - Agora real-token generation with 10-minute expiry (using `agora-token` npm package)
 - Security hardening: auth on all edge functions, price-ID allowlist, origin allowlist, idempotent webhooks (see `.lovable/plan.md`)
 - Realtime subscriptions for drops, RSVPs, calls, and messages
+- Friendfluence Drops page (invite link generation + themed drop UI at `/drops/friendfluence`)
+- Production polish: forwardRef warning fixes across all landing components (HeroSection, Navbar, StatsSection, CTASection, Footer, FeaturesSection, InnovationsSection, VerityLogo, ThemeToggle)
 
 ### In Progress 🔄
 - Tuning live moderation thresholds and browser transcript coverage fallbacks
-- Phase 4 innovation features (Spark Reflection, Voice Intro, Guardian Net)
+- Spark Reflection (post-call AI insight)
+- Verity Voice Intro (15-second voice note)
+- Guardian Net (one-tap safe-call signal)
 
 ### Upcoming 📋
 - Push notifications for RSVP reminders and new Spark matches
-- Friendfluence Drops (group RSVP + matched pairs)
 - Chemistry Replay Vault (Verity Pass gated)
 
 ---
@@ -86,6 +89,7 @@
 | **Stripe webhook idempotency** — duplicate webhook deliveries could credit tokens or subscriptions multiple times | Added `stripe_processed_events` table (primary key on `event_id`); duplicate events return `{ received: true }` immediately |
 | **Agora stub tokens** — early implementation returned placeholder tokens, breaking real calls | Replaced with `RtcTokenBuilder.buildTokenWithUid` (10-minute expiry); call-participation verified server-side before token is issued |
 | **Open redirect in customer portal** — `return_url` was accepted verbatim from client, enabling redirect to arbitrary sites | Replaced with strict URL parsing + exact-origin allowlist validation; falls back to `/tokens` when invalid |
+| **forwardRef console warnings** — React internals attaching refs to lazy-loaded function components caused noisy console warnings | Wrapped all landing components (`HeroSection`, `Navbar`, `StatsSection`, `CTASection`, `Footer`, `FeaturesSection`, `InnovationsSection`, `VerityLogo`, `ThemeToggle`) with `React.forwardRef` and added `.displayName` |
 | **Misleading UI copy** — Lobby previously showed "AI safety on" before real-time AI moderation was wired | Changed to "Safety first" — accurate (safety pledge, blocking, and reporting exist) without overstating automation |
 
 ---
