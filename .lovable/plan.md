@@ -1,64 +1,47 @@
-# Verity — Living Plan & Launch Checklist
 
-*Last updated: March 3, 2026*
 
----
+## Plan: Fix RPC Type Casts & Sort Sparks by Unread
 
-## Current State
-
-All five development phases are complete. The platform is beta-ready for a 50–100 user pilot.
-
-### Phases Complete
-1. **Core Platform** — Auth, onboarding, lobby, Agora video calls, Spark/Pass, chat
-2. **Safety & Infrastructure** — AI moderation (real LLM), admin dashboard, transparency page, appeals, blocking
-3. **Payments & Premium** — Token shop, Verity Pass subscriptions, Stripe integration with idempotent webhooks
-4. **Innovations** — Voice Intro, Guardian Net, Spark Reflection, Friendfluence Drops
-5. **Operations & Polish** — Push notifications, stats aggregation cron, JSON-LD SEO, unread badges, 33 tests
+Two high-impact, low-risk improvements from the launch checklist.
 
 ---
 
-## Remaining Launch Checklist
+### Task 1: Remove `(supabase.rpc as any)` casts
 
-### High Priority
-- [ ] Tune AI moderation thresholds with real call data from pilot Drops
-- [ ] Complete trust gate enforcement (phone/selfie/pledge must fully gate Drop participation)
-- [ ] Configure production secrets (Agora App ID/Certificate, Stripe keys, VAPID keys)
-- [ ] Run pilot Drops with 50–100 users and monitor moderation/spark/appeal rates
+The generated `types.ts` already includes typed definitions for `submit_call_decision` and `update_my_profile`. The `as any` casts are unnecessary and suppress type safety.
 
-### Medium Priority
-- [ ] Reduce lint/type debt — replace `any` casts with typed Supabase response models
-- [ ] Address bundle size warning (>2.5 MB chunk) — further code-split Agora SDK and Stripe.js
-- [ ] Build Chemistry Replay Vault (8-second highlight reel, Verity Pass exclusive)
-- [ ] Add granular drop scheduling (region targeting, capacity management)
+**Files:**
+- `src/pages/LiveCall.tsx` (line 284): Change `(supabase.rpc as any)("submit_call_decision", ...)` to `supabase.rpc("submit_call_decision", ...)`
+- `src/pages/Profile.tsx` (lines 35, 73): Same pattern for `update_my_profile`
 
-### Low Priority
-- [ ] Increase test coverage beyond 33 tests (add E2E tests for critical flows)
-- [ ] Remove stale `bun.lockb` if present (npm is canonical)
+3 lines changed across 2 files. Zero logic change — purely removing unsafe casts.
 
 ---
 
-## Security Posture
+### Task 2: Sort spark cards — unread first
 
-All edge functions enforce JWT authentication. Key security measures:
+In `src/pages/SparkHistory.tsx`, after the existing filter logic (line 102-108), sort the `filtered` array so sparks with `unread_count > 0` appear at the top, ordered by most unread first, then by `created_at` descending for the rest.
 
-| Area | Status |
-|------|--------|
-| JWT auth on all 16 edge functions | ✅ |
-| Stripe price-ID allowlist | ✅ |
-| Origin allowlist (checkout + portal) | ✅ |
-| Webhook signature verification | ✅ |
-| Idempotent event processing | ✅ |
-| Agora tokens with 10-min expiry + call verification | ✅ |
-| Admin-role gating via `has_role` RPC | ✅ |
-| RLS on all user-facing tables | ✅ |
-| Error boundary at app root | ✅ |
+**Change:** Add `.sort()` after `.filter()`:
+```ts
+const filtered = sparks
+  .filter(...)
+  .sort((a, b) => {
+    if (a.unread_count > 0 && b.unread_count === 0) return -1;
+    if (a.unread_count === 0 && b.unread_count > 0) return 1;
+    if (a.unread_count !== b.unread_count) return b.unread_count - a.unread_count;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+```
+
+1 file, ~6 lines added.
 
 ---
 
-## Architecture Quick Reference
+### Summary
 
-- **16 edge functions** — see `supabase/functions/`
-- **13 RPC functions** — see database schema
-- **20+ tables** with RLS — see `src/integrations/supabase/types.ts`
-- **9 test suites, 33 tests** — see `src/test/` and `supabase/functions/_shared/`
-- **Canonical project ID**: `itdzdyhdkbcxbqgukzis`
+- 3 files modified total
+- No database changes, no edge function changes
+- Removes a launch checklist item (RPC type casts)
+- Improves UX by surfacing unread conversations
+
