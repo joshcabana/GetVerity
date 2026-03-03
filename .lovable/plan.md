@@ -1,38 +1,20 @@
+## Launch Checklist — Remaining Items
 
+### Features
+1. **Chemistry Replay Vault** — 8-second anonymized highlight reel from mutual-spark calls, gated behind Verity Pass subscription.
 
-## Plan: Production Polish Pass
+### Tuning & Ops
+2. **AI moderation threshold tuning** — adjust risk-score thresholds with real pilot data.
+3. **Bundle size optimization** — analyze large chunks, apply further code-splitting or tree-shaking.
 
-Three concrete improvements that clear remaining launch checklist items and clean up the developer experience.
+### Manual Configuration (external dashboards)
+4. Configure Stripe Webhooks (checkout.session.completed, customer.subscription.deleted, customer.subscription.updated, invoice.paid).
+5. Verify `avatars` storage bucket is public.
+6. Configure Twilio for phone OTP in auth settings.
+7. Enable Password HIBP Check in auth settings.
+8. Configure 301 redirects from `getverity.com` → `getverity.com.au`.
+9. End-to-end verification of MediaRecorder (Voice Intro) and WebRTC (Agora) flows.
 
----
-
-### Task 1: Update `.lovable/plan.md` — replace stale content
-
-The current plan still describes trust gate enforcement, which is already shipped. Replace with the current launch checklist: Chemistry Replay Vault, AI moderation tuning, production config items, and bundle optimization.
-
-**File:** `.lovable/plan.md`
-
----
-
-### Task 2: Fix `LazyFallback` forwardRef console warning
-
-The console shows "Function components cannot be given refs... at LazyFallback". The `LazyFallback` component in `App.tsx` is a plain function component. Wrapping it with `React.forwardRef` silences this warning, consistent with the forwardRef fixes already applied to landing components.
-
-**File:** `src/App.tsx` — wrap `LazyFallback` with `forwardRef` and add `.displayName`
-
----
-
-### Task 3: Add React Router v7 future flags
-
-Console shows deprecation warnings about `v7_startTransition`. Adding the `future` prop to `BrowserRouter` opts in early and silences warnings.
-
-**File:** `src/App.tsx` — add `future={{ v7_startTransition: true }}` to `<BrowserRouter>`
-
----
-
-### Summary
-
-- 2 files modified: `src/App.tsx`, `.lovable/plan.md`
-- No database changes, no edge function changes
-- Clears console warnings and updates stale documentation
-
+### Completed ✅
+- Trust gate enforcement (route guards, RSVP block, server-side find-match check)
+- Production polish pass (forwardRef fix, React Router v7 future flags)

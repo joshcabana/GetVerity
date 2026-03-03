@@ -10,7 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AppHeader from "@/components/AppHeader";
 import PushNotificationManager from "@/components/PushNotificationManager";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, forwardRef } from "react";
 
 const Landing = lazy(() => import("./pages/Landing"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -38,11 +38,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const LazyFallback = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
+const LazyFallback = forwardRef<HTMLDivElement>((_, ref) => (
+  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
-);
+));
+LazyFallback.displayName = "LazyFallback";
 
 const App = () => (
   <HelmetProvider>
@@ -51,7 +52,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <ErrorBoundary>
                 <AppHeader />
