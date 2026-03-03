@@ -1,27 +1,48 @@
 
 
-## Plan: Update README.md
+## Recommendation: Option 1 (Raw Path Storage)
 
-The README is slightly outdated. Key changes needed:
+Option 1 is the correct choice. The critical difference is in requirement #3:
+
+- **Option 1**: Store the **raw storage path** in `voice_intro_a`/`voice_intro_b`, generate signed URLs at render time. This is architecturally sound — signed URLs expire (default 60min), so storing them would break historical playback.
+- **Option 2**: Store the **signed URL** directly. This will silently break after expiry, causing dead audio links across the app.
+
+Everything else between the two prompts is functionally identical. Option 1 also has slightly cleaner guardrails language.
+
+---
+
+## Plan: Wire VoiceIntro.tsx with Production Logic
+
+### Current State Confirmed
+- `VoiceIntro.tsx` exists with 5 phases: `intro → recording → recorded → listening → done`
+- Uses `setTimeout` simulation for listening→done transition
+- No real MediaRecorder, no storage, no DB sync
+- `sparks` table already has `voice_intro_a` and `voice_intro_b` text columns
 
 ### Changes
 
-1. **Phase 4 — Innovations**: Move "Friendfluence Drops" from roadmap to partially complete (UI + invite link generation built, page live at `/drops/friendfluence`)
+**1. Migration: `20260304_voice_intros_bucket.sql`**
+- Create `voice-intros` private storage bucket
+- RLS: authenticated INSERT to own `user_id/` prefix
+- RLS: SELECT for spark participants (using `is_spark_member` pattern)
 
-2. **Current Progress → Completed**: Add:
-   - Friendfluence Drops page (invite link generation + themed drop UI)
-   - Production polish: forwardRef warning fixes across all landing components
+**2. Update `VoiceIntro.tsx` (logic only, zero UI changes)**
 
-3. **Current Progress → In Progress**: Remove "Phase 4 innovation features" generic bullet; replace with specific remaining items (Spark Reflection, Voice Intro, Guardian Net, Chemistry Replay Vault)
+New props needed: `sparkId: string` (to know which spark row to update)
 
-4. **Current Progress → Upcoming**: Remove "Friendfluence Drops" (now built). Keep push notifications and Chemistry Replay Vault.
+Wire in:
+- **MediaRecorder API** with 15s hard limit via `timeslice` + `ondataavailable` collecting chunks, `onstop` creating Blob
+- **Self-playback** in "recorded" phase: `URL.createObjectURL(blob)` → `HTMLAudioElement` play/pause toggle on existing Play/Square button
+- **Send**: upload to `voice-intros/${user.id}/${sparkId}/${Date.now()}.webm`, store **raw path** in correct column (`voice_intro_a` if user is `user_a`, else `voice_intro_b`)
+- **Listening phase**: Supabase Realtime subscription on `sparks` table filtered by spark `id`; transition to "done" when both columns are non-null strings
+- **Skip**: write `"skipped"` to the user's column, check if partner column is also populated → if so, go to "done" immediately
 
-5. **Challenges table**: Add row for forwardRef console warnings — React internals attaching refs to lazy-loaded function components; fixed by wrapping all landing components with `React.forwardRef`.
+**3. Update `LiveCall.tsx`** (minimal — pass `sparkId` prop to `VoiceIntro`)
 
-### File
+### Files Modified
 | File | Change |
 |------|--------|
-| `README.md` | Update Phase 4, Current Progress, and Challenges sections |
-
-No other files modified.
+| New migration SQL | Storage bucket + RLS policies |
+| `src/components/call/VoiceIntro.tsx` | Wire real recording, playback, upload, realtime sync |
+| `src/pages/LiveCall.tsx` | Pass `sparkId` prop to VoiceIntro |
 
