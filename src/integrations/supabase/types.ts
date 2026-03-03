@@ -881,6 +881,10 @@ export type Database = {
         Args: { _spark_id: string; _user_id: string }
         Returns: boolean
       }
+      shares_spark_with: {
+        Args: { _profile_user_id: string; _viewer_id: string }
+        Returns: boolean
+      }
       submit_call_decision: {
         Args: {
           p_call_id: string
