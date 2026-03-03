@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-friend-invite]
 verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false

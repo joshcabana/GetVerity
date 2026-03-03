@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AppHeader from "@/components/AppHeader";
+import PushNotificationManager from "@/components/PushNotificationManager";
 import { lazy, Suspense } from "react";
 
 const Landing = lazy(() => import("./pages/Landing"));
@@ -52,6 +53,7 @@ const App = () => (
           <AuthProvider>
             <ErrorBoundary>
               <AppHeader />
+              <PushNotificationManager />
               <Suspense fallback={<LazyFallback />}>
                 <Routes>
                   <Route path="/" element={<Landing />} />
