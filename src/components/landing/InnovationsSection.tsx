@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Mic, Shield, Film, Users } from "lucide-react";
 
@@ -34,9 +35,9 @@ const innovations = [
   },
 ];
 
-const InnovationsSection = () => {
+const InnovationsSection = forwardRef<HTMLElement>((_, ref) => {
   return (
-    <section className="py-24 md:py-32 bg-secondary/30">
+    <section ref={ref} className="py-24 md:py-32 bg-secondary/30">
       <div className="container max-w-5xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -80,6 +81,8 @@ const InnovationsSection = () => {
       </div>
     </section>
   );
-};
+});
+
+InnovationsSection.displayName = "InnovationsSection";
 
 export default InnovationsSection;
