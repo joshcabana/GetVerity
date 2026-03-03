@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, Video, Sparkles, Coins, User } from "lucide-react";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const tabs = [
   { id: "home", label: "Home", icon: Home, path: "/lobby" },
@@ -17,6 +18,7 @@ interface BottomNavProps {
 const BottomNav = ({ activeTab }: BottomNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: unreadCount } = useUnreadCount();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/90 backdrop-blur-xl safe-area-bottom">
@@ -26,6 +28,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
             ? activeTab === tab.id
             : location.pathname === tab.path;
           const Icon = tab.icon;
+          const showBadge = tab.id === "sparks" && (unreadCount ?? 0) > 0;
 
           return (
             <button
@@ -39,6 +42,11 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 />
+                {showBadge && (
+                  <span className="absolute -top-1.5 -right-2.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center">
+                    {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
                 {isActive && (
                   <motion.div
                     layoutId="nav-glow"
