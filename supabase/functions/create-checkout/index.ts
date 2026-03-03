@@ -84,13 +84,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
+    const { data: paymentInfo } = await supabaseAdmin
+      .from("user_payment_info")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .single();
 
-    let customerId = profile?.stripe_customer_id;
+    let customerId = paymentInfo?.stripe_customer_id;
 
     if (!customerId) {
       // Check if a Stripe customer with this email already exists
@@ -104,9 +104,8 @@ serve(async (req) => {
 
       // Cache stripe_customer_id for future lookups
       await supabaseAdmin
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("user_id", user.id);
+        .from("user_payment_info")
+        .upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
     }
 
     const session = await stripe.checkout.sessions.create({

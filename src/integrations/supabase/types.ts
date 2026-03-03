@@ -455,7 +455,6 @@ export type Database = {
           handle: string | null
           id: string
           is_active: boolean | null
-          stripe_customer_id: string | null
           subscription_expires_at: string | null
           subscription_tier:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -476,7 +475,6 @@ export type Database = {
           handle?: string | null
           id?: string
           is_active?: boolean | null
-          stripe_customer_id?: string | null
           subscription_expires_at?: string | null
           subscription_tier?:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -497,7 +495,6 @@ export type Database = {
           handle?: string | null
           id?: string
           is_active?: boolean | null
-          stripe_customer_id?: string | null
           subscription_expires_at?: string | null
           subscription_tier?:
             | Database["public"]["Enums"]["subscription_tier"]
@@ -750,6 +747,30 @@ export type Database = {
           blocker_id?: string
           created_at?: string
           id?: string
+        }
+        Relationships: []
+      }
+      user_payment_info: {
+        Row: {
+          created_at: string
+          id: string
+          stripe_customer_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

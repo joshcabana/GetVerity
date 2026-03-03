@@ -65,14 +65,22 @@ serve(async (req) => {
 
   // Helper: find profile by stripe_customer_id, fallback to email lookup with proper filter
   async function findProfileByCustomer(customerId: string) {
-    // Try stripe_customer_id first
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_id, token_balance, stripe_customer_id")
+    // Try stripe_customer_id first via user_payment_info
+    const { data: paymentInfo } = await supabase
+      .from("user_payment_info")
+      .select("user_id, stripe_customer_id")
       .eq("stripe_customer_id", customerId)
       .single();
 
-    if (profile) return profile;
+    if (paymentInfo) {
+      // Fetch profile data needed for entitlements
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id, token_balance")
+        .eq("user_id", paymentInfo.user_id)
+        .single();
+      return profile ? { ...profile, stripe_customer_id: paymentInfo.stripe_customer_id } : null;
+    }
 
     // Fallback: get customer email from Stripe, then find user by email
     try {
@@ -87,19 +95,18 @@ serve(async (req) => {
 
       const { data: fallbackProfile } = await supabase
         .from("profiles")
-        .select("user_id, token_balance, stripe_customer_id")
+        .select("user_id, token_balance")
         .eq("user_id", userId)
         .single();
 
-      // Cache stripe_customer_id for future lookups
-      if (fallbackProfile && !fallbackProfile.stripe_customer_id) {
+      // Cache stripe_customer_id in user_payment_info for future lookups
+      if (fallbackProfile) {
         await supabase
-          .from("profiles")
-          .update({ stripe_customer_id: customerId })
-          .eq("user_id", userId);
+          .from("user_payment_info")
+          .upsert({ user_id: userId, stripe_customer_id: customerId }, { onConflict: "user_id" });
       }
 
-      return fallbackProfile;
+      return fallbackProfile ? { ...fallbackProfile, stripe_customer_id: customerId } : null;
     } catch (err) {
       console.error("Customer lookup fallback error:", err);
       return null;
